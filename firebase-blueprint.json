@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "Room": {
+      "title": "Room",
+      "description": "A Loup-Garou game room holding game state, phase, and configuration",
+      "type": "object",
+      "properties": {
+        "hostId": { "type": "string", "maxLength": 128 },
+        "hostName": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 100 },
+        "code": { "type": "string", "maxLength": 10 },
+        "status": { "type": "string", "enum": ["lobby", "in_game", "ended"] },
+        "phase": { "type": "string", "enum": ["lobby", "night_start", "werewolves", "seer", "witch", "day_discussion", "voting", "verdict", "game_over"] },
+        "round": { "type": "number" },
+        "language": { "type": "string", "enum": ["ar", "en"] },
+        "timer": { "type": "number" },
+        "maxPlayers": { "type": "number" },
+        "winner": { "type": "string", "enum": ["werewolves", "villagers", "none"] },
+        "nightVictimId": { "type": "string", "maxLength": 128 },
+        "witchSaved": { "type": "boolean" },
+        "witchPoisonedId": { "type": "string", "maxLength": 128 },
+        "seerCheckedId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["hostId", "hostName", "code", "status", "phase", "round", "language"]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "Participant in a Loup-Garou game room",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 64 },
+        "avatar": { "type": "string", "maxLength": 64 },
+        "role": { "type": "string", "enum": ["villager", "werewolf", "seer", "witch", "hunter", "bodyguard", "cupid", "unassigned"] },
+        "isAlive": { "type": "boolean" },
+        "isHost": { "type": "boolean" },
+        "isBot": { "type": "boolean" },
+        "isMuted": { "type": "boolean" },
+        "isSpeaking": { "type": "boolean" },
+        "voteTargetId": { "type": "string", "maxLength": 128 },
+        "nightTargetId": { "type": "string", "maxLength": 128 },
+        "joinedAt": { "type": "number" }
+      },
+      "required": ["uid", "name", "role", "isAlive", "isHost"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Room message or system narration log",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string", "maxLength": 128 },
+        "senderName": { "type": "string", "maxLength": 64 },
+        "text": { "type": "string", "maxLength": 500 },
+        "type": { "type": "string", "enum": ["chat", "system", "narrator", "night", "elimination"] },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["senderId", "senderName", "text", "type", "timestamp"]
+    },
+    "VoiceSignal": {
+      "title": "VoiceSignal",
+      "description": "WebRTC signaling document for peer-to-peer voice rooms",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string", "maxLength": 128 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["offer", "answer", "candidate"] },
+        "data": { "type": "string", "maxLength": 4096 },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["senderId", "targetId", "type", "data", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/rooms/{roomId}": {
+      "schema": { "$ref": "#/entities/Room" },
+      "description": "Loup-Garou game rooms"
+    },
+    "/rooms/{roomId}/players/{playerId}": {
+      "schema": { "$ref": "#/entities/Player" },
+      "description": "Players in room"
+    },
+    "/rooms/{roomId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "In-game chat and narration logs"
+    },
+    "/rooms/{roomId}/voiceSignals/{signalId}": {
+      "schema": { "$ref": "#/entities/VoiceSignal" },
+      "description": "WebRTC audio signaling for interactive voice chat"
+    }
+  }
+}

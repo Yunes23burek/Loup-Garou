@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidRoom(data) {
+      return data.hostId is string && data.hostId.size() <= 128
+        && data.hostName is string && data.hostName.size() <= 64
+        && data.code is string && data.code.size() <= 10
+        && data.status is string && (data.status in ['lobby', 'in_game', 'ended'])
+        && data.phase is string
+        && data.round is number;
+    }
+
+    function isValidPlayer(data) {
+      return data.uid is string && data.uid.size() <= 128
+        && data.name is string && data.name.size() <= 64
+        && data.role is string
+        && data.isAlive is bool;
+    }
+
+    function isValidMessage(data) {
+      return data.senderId is string && data.senderId.size() <= 128
+        && data.senderName is string && data.senderName.size() <= 64
+        && data.text is string && data.text.size() <= 500
+        && data.type is string
+        && data.timestamp is number;
+    }
+
+    // Connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Rooms collection
+    match /rooms/{roomId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming());
+      allow update: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming());
+      allow delete: if isSignedIn() && isValidId(roomId) && (resource.data.hostId == request.auth.uid);
+
+      // Players subcollection
+      match /players/{playerId} {
+        allow get, list: if isSignedIn();
+        allow create, update: if isSignedIn() && isValidId(playerId) && isValidPlayer(incoming());
+        allow delete: if isSignedIn() && isValidId(playerId);
+      }
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow get, list: if isSignedIn();
+        allow create: if isSignedIn() && isValidId(messageId) && isValidMessage(incoming());
+        allow update, delete: if false;
+      }
+
+      // WebRTC voice signals
+      match /voiceSignals/{signalId} {
+        allow get, list: if isSignedIn();
+        allow create: if isSignedIn() && isValidId(signalId);
+        allow delete: if isSignedIn() && isValidId(signalId);
+        allow update: if false;
+      }
+    }
+  }
+}

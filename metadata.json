@@ -1,0 +1,8 @@
+{
+  "name": "Loup-Garou: قرية المستذئبين",
+  "description": "لعبة لوب غارو (المستذئبون) التفاعلية بالعربية والإنجليزية مع غرف محادثة صوتية تفاعلية وتجربة لعب جماعية مشوقة",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
